@@ -11,10 +11,36 @@ func main() {
     port := flag.String("port", "8080", "Port du serveur")
     flag.Parse()
 
+    games, err := FetchGames()
+
+    if err != nil {
+        fmt.Println("Erreur :", err)
+        return
+    }
+
+    tournaments, err := FetchTournaments()
+
+    if err != nil {
+        fmt.Println("Erreur :", err)
+        return
+    }
+
+    for _, game := range games {
+        count := 0
+
+        for _, tournament := range tournaments {
+            if tournament.GameID == game.ID {
+                count++
+            }
+        }
+
+        fmt.Println(game.Name, game.Year, "-", count, "tournois")
+    }
+
     mux := http.NewServeMux()
 
     mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintln(w, "Bienvenue sur GameDex")
+        http.ServeFile(w, r, "index.html")
     })
 
     mux.HandleFunc("GET /jeux", func(w http.ResponseWriter, r *http.Request) {
