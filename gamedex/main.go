@@ -1,12 +1,16 @@
 package main
 
 import (
+    "flag"
     "fmt"
     "net/http"
     "strconv"
 )
 
 func main() {
+    port := flag.String("port", "8080", "Port du serveur")
+    flag.Parse()
+
     mux := http.NewServeMux()
 
     mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
@@ -33,5 +37,7 @@ func main() {
         fmt.Fprintln(w, "Jeu numero", id)
     })
 
-    http.ListenAndServe(":8080", mux)
+    mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
+    http.ListenAndServe(":"+*port, mux)
 }
