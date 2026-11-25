@@ -1,0 +1,24 @@
+{{define "liste"}}
+{{template "header" .}}
+
+<h1>Liste des jeux</h1>
+
+<form action="/jeux" method="GET">
+    <input type="text" name="q" value="{{.Query}}" placeholder="Rechercher un jeu">
+    <button type="submit">Rechercher</button>
+</form>
+
+<p>Recherche : {{.Query}}</p>
+
+<ul>
+    {{range .Games}}
+        <li>
+            <a href="/jeux/{{.ID}}">{{.Name}}</a>
+        </li>
+    {{else}}
+        <li>Aucun jeu trouvé.</li>
+    {{end}}
+</ul>
+
+{{template "footer" .}}
+{{end}}

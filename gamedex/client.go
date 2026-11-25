@@ -10,7 +10,7 @@ import (
 var client = &http.Client{
     Timeout: 3 * time.Second,
 }
-
+ 
 func FetchGames() ([]Game, error) {
     resp, err := client.Get("http://localhost:8081/api/games")
 

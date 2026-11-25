@@ -1,0 +1,19 @@
+{{define "jeu"}}
+{{template "header" .}}
+
+<h1>{{.Game.Name}}</h1>
+
+<p>{{.Game.Description}}</p>
+
+<h2>Tournois</h2>
+
+<ul>
+    {{range .Tournaments}}
+        <li>{{.Name}} - {{.City}} - {{.Date}}</li>
+    {{else}}
+        <li>Aucun tournoi disponible.</li>
+    {{end}}
+</ul>
+
+{{template "footer" .}}
+{{end}}
