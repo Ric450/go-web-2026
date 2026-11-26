@@ -1,16 +1,28 @@
+
 {{define "liste"}}
 {{template "header" .}}
 
 <h1>Liste des jeux</h1>
 
-<form action="/jeux" method="GET">
+<form id="form-recherche" action="/jeux" method="GET">
+
     <input type="text" name="q" value="{{.Query}}" placeholder="Rechercher un jeu">
+
+    <select name="genre">
+        <option value="">Tous les genres</option>
+        <option value="Action">Action</option>
+        <option value="FPS">FPS</option>
+        <option value="RPG">RPG</option>
+        <option value="Sport">Sport</option>
+    </select>
+
     <button type="submit">Rechercher</button>
+
 </form>
 
-<p>Recherche : {{.Query}}</p>
+<p id="recherche">Recherche : {{.Query}}</p>
 
-<ul>
+<ul id="resultats">
     {{range .Games}}
         <li>
             <a href="/jeux/{{.ID}}">{{.Name}}</a>
@@ -19,6 +31,41 @@
         <li>Aucun jeu trouvé.</li>
     {{end}}
 </ul>
+
+<script>
+    const form = document.getElementById("form-recherche");
+
+    form.addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const params = new URLSearchParams(new FormData(form));
+
+        try {
+            const response = await fetch("/jeux?" + params.toString());
+
+            if (!response.ok) {
+                throw new Error("Erreur HTTP");
+            }
+
+            const html = await response.text();
+
+            const parser = new DOMParser();
+
+            const page = parser.parseFromString(html, "text/html");
+
+            document.getElementById("resultats").replaceChildren(
+                ...page.getElementById("resultats").children
+            );
+
+            document.getElementById("recherche").textContent =
+                "Recherche : " + params.get("q");
+
+        } catch (error) {
+            alert("Erreur pendant la recherche.");
+        }
+    });
+</script>
 
 {{template "footer" .}}
 {{end}}

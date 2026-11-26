@@ -3,17 +3,40 @@
 
 <h1>{{.Game.Name}}</h1>
 
-<p>{{.Game.Description}}</p>
-
 <h2>Tournois</h2>
 
 <ul>
     {{range .Tournaments}}
-        <li>{{.Name}} - {{.City}} - {{.Date}}</li>
+        <li class="tournoi"
+            data-lat="{{.Lat}}"
+            data-lng="{{.Lng}}">
+            {{.Name}} - {{.City}} - {{.Date}}
+        </li>
     {{else}}
         <li>Aucun tournoi disponible.</li>
     {{end}}
 </ul>
+
+<h2>Carte des tournois</h2>
+
+<div id="map" style="height: 400px;"></div>
+
+<script>
+    const map = L.map("map").setView([46.6, 2.2], 5);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    document.querySelectorAll(".tournoi").forEach(tournoi => {
+        const lat = Number(tournoi.dataset.lat);
+        const lng = Number(tournoi.dataset.lng);
+
+        L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(document.createTextNode(tournoi.textContent.trim()));
+    });
+</script>
 
 {{template "footer" .}}
 {{end}}

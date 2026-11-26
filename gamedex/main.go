@@ -60,22 +60,35 @@ func main() {
 		}
 
 		q := r.URL.Query().Get("q")
+		genre := r.URL.Query().Get("genre")
 
 		resultats := games[:0]
 
 		for _, game := range games {
-			if strings.Contains(
+
+			nomOK := strings.Contains(
 				strings.ToLower(game.Name),
 				strings.ToLower(q),
-			) {
+			)
+
+			genreOK := genre == ""
+
+			for _, g := range game.Genres {
+				if strings.EqualFold(g, genre) {
+					genreOK = true
+				}
+			}
+
+			if nomOK && genreOK {
 				resultats = append(resultats, game)
 			}
 		}
 
 		data := map[string]any{
-			"Games": resultats,
-			"Query": q,
-		}
+    "Games": resultats,
+    "Query": q,
+    "Genre": genre,
+}
 
 		render(w, "liste", data, 200)
 	})

@@ -1,5 +1,4 @@
-// Mini API du cours : go run ./api (depuis la racine du dépôt go-web-2026)
-// Elle écoute sur http://localhost:8081 et garde la main tant qu'elle tourne.
+
 package main
 
 import (
@@ -23,6 +22,7 @@ func main() {
 	mux.HandleFunc("GET /api/docs", docs)
 	mux.HandleFunc("GET /api/openapi.yaml", spec)
 	mux.HandleFunc("GET /api/games", listGames)
+	mux.HandleFunc("POST /api/recherche", recherche)
 	mux.HandleFunc("GET /api/games/{id}", getGame)
 	mux.HandleFunc("GET /api/games/{id}/tournaments", gameTournaments)
 	mux.HandleFunc("GET /api/tournaments", listTournaments)
@@ -35,7 +35,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(*addr, logRequests(mux)))
 }
 
-// writeJSON envoie n'importe quelle donnée Go en JSON avec le bon code.
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
@@ -59,8 +58,6 @@ func index(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// listGames accepte des filtres optionnels dans la query string :
-// ?q=cel (nom, sans tenir compte des majuscules), ?genre=course, ?year=2018
 func listGames(w http.ResponseWriter, r *http.Request) {
 	q := strings.ToLower(r.URL.Query().Get("q"))
 	genre := r.URL.Query().Get("genre")
@@ -121,8 +118,6 @@ func listTournaments(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, tournaments)
 }
 
-// stats est protégé par une clé, envoyée dans l'en-tête X-API-Key.
-// Pas de clé ou clé inconnue : 401. Clé "eleve" : connue mais sans les droits, 403. Clé "prof" : 200.
 func stats(w http.ResponseWriter, r *http.Request) {
 	switch r.Header.Get("X-API-Key") {
 	case "prof":
@@ -146,15 +141,12 @@ func slow(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, games)
 }
 
-// logRequests affiche chaque requête reçue : pratique pour voir qui appelle l'API.
 func logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s", r.Method, r.URL)
 		next.ServeHTTP(w, r)
 	})
 }
-
-// La documentation : la spec OpenAPI est intégrée au programme, Swagger UI vient d'un CDN.
 
 //go:embed openapi.yaml
 var openapiSpec []byte
@@ -183,4 +175,31 @@ const docsPage = `<!DOCTYPE html>
 func docs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(docsPage))
+}
+
+// Nouvelle fonction POST
+func recherche(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Query string `json:"query"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&data)
+
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "JSON invalide")
+		return
+	}
+
+	resultats := []Game{}
+
+	for _, game := range games {
+		if strings.Contains(
+			strings.ToLower(game.Name),
+			strings.ToLower(data.Query),
+		) {
+			resultats = append(resultats, game)
+		}
+	}
+
+	writeJSON(w, http.StatusOK, resultats)
 }
